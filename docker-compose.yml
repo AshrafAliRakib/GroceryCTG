@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend:/code
+      - ./media:/code/media
+    env_file: .env
+    environment:
+      - DJANGO_SECRET=${DJANGO_SECRET}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=db
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3000:3000"
+    command: bash -c "npm install && npm run start"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+
+volumes:
+  postgres_data:
